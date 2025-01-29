@@ -1,11 +1,9 @@
 class TemplateEngine {
-    #template
-    #tokens
-    #escape
+    #template = ''
+    #tokens = []
+    #escape = {}
 
-    constructor(template) {
-        this.#template = template
-        this.#tokens = this.#tokenize()
+    constructor() {
         this.#escape = {
             '&': '&amp;',
             '<': '&lt;',
@@ -16,12 +14,12 @@ class TemplateEngine {
 
     }
 
-    #tokenize() {
+    #tokenize(template) {
         let regex = /{%=?-?([\s\S]+?)%}|([^{%]+)/g,
             match,
             tokens = []
 
-        while ((match = regex.exec(this.#template)) !== null) {
+        while ((match = regex.exec(template)) !== null) {
             if (match[1]) {
                 let code = match[1].trim()
                 if (match[0].startsWith("{%=")) {
@@ -39,12 +37,12 @@ class TemplateEngine {
         return tokens
     }
 
-    #compile() {
+    #compile(template) {
         let code = `let output = ""; \n`,
             escapeHTML = str => String(str).replace(/[&<>"']/g, (match) => {
                 return this.#escape[match] || match
             })
-
+        this.#tokens = this.#tokenize(template)
         this.#tokens.forEach(token => {
             switch (token.type) {
                 case "TEXT":
@@ -66,8 +64,8 @@ class TemplateEngine {
         return new Function("data", "escapeHTML", `with(data) { ${code} }`)
     }
 
-    render(data) {
-        let renderFunction = this.#compile()
+    render(template, data) {
+        let renderFunction = this.#compile(template)
         return renderFunction(data, str => str.replace(/[&<>"']/g, match => {
             return this.#escape[match] || match
         }))
@@ -95,13 +93,14 @@ const template = `
 const data = {
   title: "<span>Bienvenue</span>",
   description: "Découvrez notre sélection !",
-  showProducts: true,
-  showDiscounts: false,
+  showProducts: false,
+  showDiscounts: true,
   items: [
     { name: "Produit 1", price: "10€" },
     { name: "Produit 2", price: "15€" },
 ],
 }
 
-const engine = new TemplateEngine(template)
-console.log(engine.render(data))
+const engine = new TemplateEngine()
+console.log(engine.render(template, data))
+console.log(engine.render(template, data))
