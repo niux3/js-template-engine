@@ -1,8 +1,12 @@
 class TemplateEngine {
+    #template
+    #tokens
+    #escape
+
     constructor(template) {
-        this._template = template
-        this._tokens = this._tokenize()
-        this._escape = {
+        this.#template = template
+        this.#tokens = this.#tokenize()
+        this.#escape = {
             '&': '&amp;',
             '<': '&lt;',
             '>': '&gt;',
@@ -12,12 +16,12 @@ class TemplateEngine {
 
     }
 
-    _tokenize() {
+    #tokenize() {
         let regex = /{%=?-?([\s\S]+?)%}|([^{%]+)/g,
             match,
             tokens = []
 
-        while ((match = regex.exec(this._template)) !== null) {
+        while ((match = regex.exec(this.#template)) !== null) {
             if (match[1]) {
                 let code = match[1].trim()
                 if (match[0].startsWith("{%=")) {
@@ -35,13 +39,13 @@ class TemplateEngine {
         return tokens
     }
 
-    _compile() {
+    #compile() {
         let code = `let output = ""; \n`,
             escapeHTML = str => String(str).replace(/[&<>"']/g, (match) => {
-                return this._escape[match] || match
+                return this.#escape[match] || match
             })
 
-        this._tokens.forEach(token => {
+        this.#tokens.forEach(token => {
             switch (token.type) {
                 case "TEXT":
                     code += `output += ${JSON.stringify(token.value)};\n`
@@ -63,9 +67,9 @@ class TemplateEngine {
     }
 
     render(data) {
-        let renderFunction = this._compile()
+        let renderFunction = this.#compile()
         return renderFunction(data, str => str.replace(/[&<>"']/g, match => {
-            return this._escape[match] || match
+            return this.#escape[match] || match
         }))
     }
 }
