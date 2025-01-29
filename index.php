@@ -9,35 +9,38 @@
 <body>
 <div id="target_a"></div>
 <div id="target_b"></div>
-<script id="usageList" type="text/template">
-    <table cellspacing='0' cellpadding='0' border='1'>
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            <%
-            // repeat items
-            for (var i = 0; i < users.length; i++) {
-                var item = users[i],
-                    key = i;
-            %>
-            <tr>
-                <!-- use variables -->
-                <td><%= key %></td>
-                <td class="">
-                    <!-- use %- to inject un-sanitized user input (see 'Demo of XSS hack') -->
-                    <h3><%= item.name %></h3>
-                    <p><%= item.interests %></p>
-                </td>
-            </tr>
-            <% } %>
-        </tbody>
-    </table>
-</script>
-    <script type="module" src="template.js?v=<?= time() ?>"></script>
+<template id="tplIndexPosts">
+    <h1>{%= title %}</h1>
+    <p>{%- description %}</p>
+    {% if (showPosts) { %}
+      <ul>
+        {% for (let post of posts) { %}
+          <li>
+            <a href="{%- post.url %}">
+                <span>{%- post.title %}</span>
+            </a>
+            {% if (post.tags.length) { %}
+                <span> ({%- post.tags.join(', ') %})</span>
+            {% } %}
+        </li>
+        {% } %}
+      </ul>
+    {% } else if (showProducts) { %}
+      <h1>Nos produits</h1>
+      <p>{%- products.join(', ') %}</p>
+    {% } else { %}
+      <p>Rien à afficher</p>
+    {% } %}
+</template>
+<template id="tplUsersList">
+    <dl>
+        {% for(let user of users){ %}
+            <dt>{%- user.name %}</dt>
+            <dd>{%= user.interests %}</dd>
+        {% } %}
+    </dl>
+</template>
+    <script type="module" src="TemplateEngine.js?v=<?= time() ?>"></script>
     <script type="module" src="app.js?v=<?= time() ?>"></script>
 </body>
 </html>
