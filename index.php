@@ -37,7 +37,7 @@
         </tbody>
     </table>
 </script>
-    <script type="module" src="template.js"></script>
+    <script type="module" src="template.js?v=<?= time() ?>"></script>
     <script type="module" src="app.js?v=<?= time() ?>"></script>
 </body>
 </html>
