@@ -66,7 +66,6 @@ export class TemplateEngine {
     render(template, data) {
         let renderFunction = this.#compile(template)
         return renderFunction(data, str => str.replace(/[&<>"']/g, match => {
-            console.log(data)
             return this.#escape[match] || match
         }))
     }

@@ -9,7 +9,7 @@
 <body>
 <div id="target_a"></div>
 <div id="target_b"></div>
-<template id="tplIndexPosts">
+<script id="tplIndexPosts" type="text/template">
     <h1>{%= title %}</h1>
     <p>{%- description %}</p>
     {% if (showPosts) { %}
@@ -31,16 +31,21 @@
     {% } else { %}
       <p>Rien à afficher</p>
     {% } %}
-</template>
-<template id="tplUsersList">
-    <dl>
-        {% for(let user of users){ %}
-            <dt>{%- user.name %}</dt>
-            <dd>{%= user.interests %}</dd>
+</script>
+<script id="tplUsersList" type="text/template">
+    <table cellspacing='0' cellpadding='0' border='1'>
+        {% for(let [ index, user ] of Object.entries(users)){ 
+            let id = parseInt(index, 10) + 1
+        %}
+            <tr>
+                <td>{%- id %}</td>
+                <td>{%- user.name %}</td>
+                <td>{%= user.interests %}</td>
+            </tr>
         {% } %}
-    </dl>
-</template>
-    <script type="module" src="TemplateEngine.js?v=<?= time() ?>"></script>
-    <script type="module" src="app.js?v=<?= time() ?>"></script>
+    </table>
+</script>
+    <script type="module" src="TemplateEngine.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
