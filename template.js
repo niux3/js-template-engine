@@ -1,67 +1,125 @@
-export default class Template{
-    static render(text, data){
-        let settings = {
-                evaluate    : /<%([\s\S]+?)%>/g,
-                interpolate : /<%=([\s\S]+?)%>/g,
-                escape      : /<%-([\s\S]+?)%>/g
-            },
-            noMatch = /(.)^/,
-            escapes = {
-                "'":      "'",
-                '\\':     '\\',
-                '\r':     'r',
-                '\n':     'n',
-                '\u2028': 'u2028',
-                '\u2029': 'u2029'
-            },
-            escaper = /\\|'|\r|\n|\u2028|\u2029/g,
-            escapeChar = function(match) {
-                return '\\' + escapes[match];
-            },
-            matcher = RegExp([
-                (settings.escape || noMatch).source,
-                (settings.interpolate || noMatch).source,
-                (settings.evaluate || noMatch).source
-            ].join('|') + '|$', 'g'),
-            index = 0,
-            source = "__p+='",
-            render = null;
+class TemplateLexer {
+  constructor(template) {
+    this.template = template;
+    this.tokens = [];
+    this.tokenize();
+  }
 
-        text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
-            source += text.slice(index, offset).replace(escaper, escapeChar);
-            index = offset + match.length;
+  tokenize() {
+    const regex = /{%=?-?([\s\S]+?)%}|([^{%]+)/g;
+    let match;
 
-            if (escape) {
-                source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
-            } else if (interpolate) {
-                source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
-            } else if (evaluate) {
-                source += "';\n" + evaluate + "\n__p+='";
-            }
-            return match;
-        });
-        source += "';\n";
-
-        if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
-
-        source = "var __t,__p='',__j=Array.prototype.join," +
-          "print=function(){__p+=__j.call(arguments,'');};\n" +
-          source + 'return __p;\n';
-
-        try {
-            render = new Function(settings.variable || 'obj', '_', source);
-        } catch (e) {
-            e.source = source;
-            throw e;
+    while ((match = regex.exec(this.template)) !== null) {
+      if (match[1]) {
+        const code = match[1].trim(); // Supprime <% et %>
+        if (match[0].startsWith("{%=")) {
+          this.tokens.push({ type: "OUTPUT_ESCAPED", value: code });
+        } else if (match[0].startsWith("{%-")) {
+          this.tokens.push({ type: "OUTPUT_RAW", value: code });
+        } else {
+          this.tokens.push({ type: "JS_CODE", value: code });
         }
-
-        let template = function(data) {
-                return render.call(this, data);
-            },
-            argument = settings.variable || 'obj';
-
-        template.source = 'function(' + argument + '){\n' + source + '}';
-
-        return template(data);
+      } else if (match[2]) {
+        this.tokens.push({ type: "TEXT", value: match[2] });
+      }
     }
+  }
 }
+
+class TemplateCompiler {
+  constructor(tokens) {
+    this.tokens = tokens;
+  }
+
+  compile() {
+    let code = `let output = ""; \n`;
+
+    const escapeHTML = (str) => String(str).replace(/[&<>"']/g, (match) => {
+      const escapeMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      };
+      return escapeMap[match] || match;
+    });
+
+    this.tokens.forEach((token) => {
+      switch (token.type) {
+        case "TEXT":
+          code += `output += ${JSON.stringify(token.value)};\n`;
+          break;
+        case "OUTPUT_ESCAPED":
+          code += `output += escapeHTML(${token.value});\n`;
+          break;
+        case "OUTPUT_RAW":
+          code += `output += ${token.value};\n`;
+          break;
+        case "JS_CODE":
+          code += `${token.value}\n`;
+          break;
+      }
+    });
+
+    code += `return output;`;
+    return new Function("data", "escapeHTML", `with(data) { ${code} }`);
+  }
+}
+const template = `
+<h1>{%= title %}</h1>
+<p>{%- description %}</p>
+
+{% if (1 + 1 === 2) { %}
+  <ul>
+    {% for (const item of items) { %}
+      <li>{%- item.name %} - {%- item.price %}</li>
+    {% } %}
+    {% if (showDiscounts) { %}
+    <li>
+      <ul>
+    {% for (const item of items) { %}
+      <li>{%- item.name %} - {%- item.price %}</li>
+    {% } %}
+      
+      </ul>
+    </li>
+    {% } %}
+  </ul>
+{% } else if (showDiscounts) { %}
+  <p>Voici les promotions !</p>
+{% } else { %}
+  <p>Aucun produit disponible actuellement.</p>
+{% } %}
+`;
+
+const data = {
+  title: "Bienvenue",
+  description: "Découvrez notre sélection !",
+  showProducts: true,
+  showDiscounts: true,
+  items: [
+    { name: "Produit 1", price: "10€" },
+    { name: "Produit 2", price: "15€" },
+  ],
+};
+
+const lexer = new TemplateLexer(template);
+console.log(lexer.tokens); 
+
+const compiler = new TemplateCompiler(lexer.tokens);
+const renderFunction = compiler.compile();
+
+const output = renderFunction(data, (str) => str.replace(/[&<>"']/g, (match) => {
+  const escapeMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return escapeMap[match] || match;
+}));
+
+console.log(output);
+
