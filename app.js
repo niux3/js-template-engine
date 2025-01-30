@@ -3,7 +3,7 @@ import {TemplateEngine} from './TemplateEngine.js';
 (()=>{
     let tplIndexPosts = document.getElementById('tplIndexPosts'),
         tplUsersList = document.getElementById('tplUsersList'),
-        txtTplIndexPosts = tplIndexPosts.innerHTML,
+        txtTplIndexPosts = tplIndexPosts.textContent,
         txtTplUsersList = tplUsersList.textContent,
         templateEngine = new TemplateEngine(),
         data = {
@@ -19,10 +19,10 @@ import {TemplateEngine} from './TemplateEngine.js';
             products: ["Iphone 15", "Samsung S24"],
         },
         users = [
-            {name:"Alexander", interests:"creating large empires"},
-            {name:"Edward", interests:"ha.ckers.org <\nBGSOUND SRC=\"javascript:alert('XSS');\">"},
-            {name:"Yolando", interests:"working out"},
-            {name:"Zachary", interests:"picking flowers for Angela"}
+            {name:"Alexandre", interests:"Veut dominer le monde"},
+            {name:"Denis", interests:"ha.ckers.org <script src=\"javascript:alert('XSS');\"></script>"},
+            {name:"Christelle", interests:"Travaille dehors"},
+            {name:"Claude", interests:"Cueille des fleurs pour Angela"}
         ]
     document.getElementById('target_a').innerHTML = templateEngine.render(txtTplIndexPosts, data)
     document.getElementById('target_b').innerHTML = templateEngine.render(txtTplUsersList, {users})
