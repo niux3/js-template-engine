@@ -1,8 +1,8 @@
 # js-template-engine
 
-Ne pas oublier que ce moteur est une bicyclette. 
+**Ne pas oublier que ce moteur est une bicyclette.**
 
-Éviter l'élément html <template>. J'ai remarqué des problèmes avec. Mieux vaut utiliser <script type="text/template">
+Éviter l'élément html [<template>](https://developer.mozilla.org/fr/docs/Web/HTML/Element/template). J'ai remarqué des problèmes avec. Mieux vaut utiliser [<script type="text/template">](https://developer.mozilla.org/fr/docs/Web/HTML/Element/script)
 
 afficher la variable telle quelle :
 
